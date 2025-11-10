@@ -55,7 +55,7 @@ python官方下载地址：https://www.python.org/downloads/
 
 ### 基本使用
 
-1. 使用文本编辑器打开 [config.py](config.py) 配置相关参数
+1. 使用文本编辑器打开 [config.yaml](config.yaml) 配置相关参数
 2. 运行主程序：
    ```bash
    python main.py

@@ -12,11 +12,11 @@ import win32gui
 import win32process
 from PIL import Image
 
-from config import Config
+from config_loader import load_config
 from image_fit_paste import paste_image_auto
 from text_fit_draw import draw_text_auto
 
-config = Config()
+config = load_config()
 
 logging.basicConfig(
     level=getattr(logging, config.logging_level.upper(), logging.INFO),
