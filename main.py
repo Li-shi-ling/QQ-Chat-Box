@@ -23,8 +23,23 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
-last_used_image_file = config.baseimage_file
+# 当前使用的表情索引
+current_emotion = "#普通#"
+last_used_image_file = config.baseimage_mapping[current_emotion]
 ratio = 1
+
+# 注册表情切换快捷键
+def register_emotion_switch_hotkeys():
+    """注册表情切换快捷键"""
+    def switch_emotion(emotion_tag):
+        global current_emotion, last_used_image_file
+        current_emotion = emotion_tag
+        last_used_image_file = config.baseimage_mapping.get(emotion_tag, config.baseimage_file)
+        logging.info(f"已切换到表情: {emotion_tag} ({last_used_image_file})")
+    
+    for hotkey, emotion_tag in config.emotion_switch_hotkeys.items():
+        # 为每个表情快捷键绑定切换函数
+        keyboard.add_hotkey(hotkey, switch_emotion, args=(emotion_tag,), suppress=False)
 
 
 def is_vertical_image(image: Image.Image) -> bool:
@@ -359,6 +374,10 @@ is_hotkey_bound = keyboard.add_hotkey(
 logging.info("热键绑定: " + str(bool(is_hotkey_bound)))
 logging.info("允许的进程: " + str(config.allowed_processes))
 logging.info("键盘监听已启动，按下 {} 以生成图片".format(config.hotkey))
+
+# 注册表情切换快捷键
+register_emotion_switch_hotkeys()
+logging.info("表情切换快捷键已注册: " + str(config.emotion_switch_hotkeys))
 
 # 保持程序运行
 try:

@@ -98,6 +98,17 @@ AUTO_SEND_IMAGE = True
 # 此值为字符串
 LOGGING_LEVEL = "INFO"
 
+# 表情切换快捷键映射，使用alt+数字键切换对应的表情
+# key为热键组合，value为对应的表情标签
+EMOTION_SWITCH_HOTKEYS = {
+    "alt+1": "#普通#",
+    "alt+2": "#开心#",
+    "alt+3": "#生气#",
+    "alt+4": "#无语#",
+    "alt+5": "#脸红#",
+    "alt+6": "#病娇#",
+}
+
 
 class Config(BaseModel):
     hotkey: str = HOTKEY
@@ -136,3 +147,5 @@ class Config(BaseModel):
     """是否自动发送图片"""
     logging_level: str = LOGGING_LEVEL
     """日志记录等级"""
+    emotion_switch_hotkeys: dict = EMOTION_SWITCH_HOTKEYS
+    """表情切换快捷键映射"""
