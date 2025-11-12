@@ -45,8 +45,10 @@ python官方下载地址：https://www.python.org/downloads/
 此操作会自动安装所有依赖库
 
 ### 直接下载exe文件
-1. 点击下载 [main.exe](https://github.com/HZBHZB1234/Anan-s-Sketchbook-Chat-Box-re/releases/tag/v1.0.0)  
-可使用 https://github.akams.cn/ 加速下载 
+1. 点击下载 [main.exe](https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box/releases/tag/ui-v2.0.0)  
+可使用 https://github.akams.cn/ 加速下载  
+此版本为ui测试版，使用方法略有差异  
+  
 ### 使用git进行部署的方法此处不再赘述
 
 
