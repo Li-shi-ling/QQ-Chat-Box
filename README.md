@@ -114,3 +114,5 @@ python官方下载地址：https://www.python.org/downloads/
 ## 另附
 
 如需在 macOS 或 Linux 上使用，请参考 [跨平台分支](https://github.com/Sheyiyuan/Anan-s-Sketchbook-Chat-Box)。
+
+如需在自动化脚本中使用，请参考 [None bot分支](https://github.com/ZiAzusa/nonebot_plugin_anans_sketchbook)。
