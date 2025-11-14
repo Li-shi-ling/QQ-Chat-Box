@@ -48,6 +48,8 @@ class Config(BaseModel):
         "alt+1": "#普通#"
     }
     """表情切换快捷键映射"""
+    text_wrap_algorithm: str = "original"
+    """文本换行算法，可选值："original"(原始算法), "knuth_plass"(改进的Knuth-Plass算法)"""
 
     class Config:
         arbitrary_types_allowed = True

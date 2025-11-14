@@ -196,6 +196,7 @@ def process_text_and_image(text: str, image: Optional[Image.Image]) -> Optional[
                 color=(0, 0, 0),
                 max_font_height=64,
                 font_path=config.font_file,
+                wrap_algorithm=config.text_wrap_algorithm,  # 添加这一行以使用配置的算法
             )
         except Exception as e:
             logging.error("生成图片失败: %s", e)
@@ -245,6 +246,7 @@ def process_text_and_image(text: str, image: Optional[Image.Image]) -> Optional[
                     color=(0, 0, 0),
                     max_font_height=64,
                     font_path=config.font_file,
+                    wrap_algorithm=config.text_wrap_algorithm,  # 添加这一行以使用配置的算法
                 )
             else:
                 logging.info("使用上下排布（横图）")
@@ -286,6 +288,7 @@ def process_text_and_image(text: str, image: Optional[Image.Image]) -> Optional[
                     color=(0, 0, 0),
                     max_font_height=64,
                     font_path=config.font_file,
+                    wrap_algorithm=config.text_wrap_algorithm,  # 添加这一行以使用配置的算法
                 )
             
             return final_bytes
