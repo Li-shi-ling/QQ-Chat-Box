@@ -113,8 +113,6 @@ def create_rectangle_background(size, color="#F0F0F2", save_path=None):
 
     if save_path:
         image.save(save_path, "PNG")
-        print(f"矩形背景已保存到: {save_path}")
-        print(f"尺寸: {size}, 颜色: {color}")
 
     return image
 
@@ -152,16 +150,12 @@ def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceH
 
     # ----- ③ 计算文本尺寸 -----
     bbox = font.getbbox("字")
-    print(bbox)
     line_height = int(bbox[3] - bbox[1] + 4)  # 增加一点行间距
     text_height = line_height * len(lines)
     text_width = max(draw_tmp.textlength(line, font=font) for line in lines)
 
     width = int(text_width + padding * 2)
     height = int(text_height + padding * 3)
-    print(padding * 3)
-    print(text_height)
-    print(height)
 
     # ----- ④ 创建图层 -----
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -221,8 +215,6 @@ def download_avatar(avatar_url, save_path="avatar.jpg"):
         with open(save_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
-        
-        print(f"头像已成功下载到: {save_path}")
         return save_path
         
     except requests.exceptions.RequestException as e:
@@ -290,7 +282,6 @@ def download_circular_avatar(avatar_url, save_path="avatar.png", crop_circle=Tru
             image = background
 
         image.save(save_path, format_type)
-        print(f"头像已成功下载到: {save_path} (尺寸: {image.size})")
         return save_path
 
     except Exception as e:
