@@ -5,3 +5,4 @@ pywin32>=311
 psutil
 pydantic
 PyYAML>=6.0
+requests

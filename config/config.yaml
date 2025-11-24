@@ -3,12 +3,14 @@
 # 生成图片的热键, 用于 keyboard 库
 hotkey: "enter"
 
+# qq头像缓存位置
+avatar_cache_location: "./avatar"
+
 # 允许运行此程序的进程列表，只有当前最上层窗口属于这些进程时，热键才会生效
 # 例如: ["qq.exe", "weixin.exe"] 表示只在QQ和微信中生效
 # 留空列表 [] 表示在所有进程中生效
 allowed_processes:
   - "qq.exe"
-  - "weixin.exe"
 
 # 全选快捷键, 此按键并不会监听, 而是会作为模拟输入
 select_all_hotkey: "ctrl+a"
