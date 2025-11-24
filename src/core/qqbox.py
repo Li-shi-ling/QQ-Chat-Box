@@ -1,9 +1,90 @@
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
+import textwrap
 import requests
+import math
 import json
 import os
 
+# 圆角框
+def create_chat_bubble(
+        text,
+        max_width=480,
+        font_path="./resources/fonts/SourceHanSansSC-Light.otf",
+        font_size=36,
+        font=None,               # 新增参数
+        padding=21,
+        bg_color=(255, 255, 255, 220),
+        text_color=(0, 0, 0, 255),
+        corner_radius=27,
+        save_path=None
+    ):
+
+    # ----- ① 加载字体 -----
+    if font is None:
+        if os.path.exists(font_path):
+            font = ImageFont.truetype(font_path, font_size)
+        else:
+            font = ImageFont.load_default()
+
+    # 临时画布测量
+    temp = Image.new("RGB", (1, 1))
+    draw_tmp = ImageDraw.Draw(temp)
+
+    # ----- ② 自动换行 -----
+    lines = []
+    current = ""
+
+    for ch in text:
+        test = current + ch
+        w = draw_tmp.textlength(test, font=font)
+        if w <= max_width - padding * 2:
+            current = test
+        else:
+            lines.append(current)
+            current = ch
+
+    if current:
+        lines.append(current)
+
+    # ----- ③ 计算文本尺寸 -----
+    bbox = font.getbbox("字")
+    print(bbox)
+    line_height = int(bbox[3] - bbox[1] + 4)  # 增加一点行间距
+    text_height = line_height * len(lines)
+    text_width = max(draw_tmp.textlength(line, font=font) for line in lines)
+
+    width = int(text_width + padding * 2)
+    height = int(text_height + padding * 3)
+    print(padding * 3)
+    print(text_height)
+    print(height)
+
+    # ----- ④ 创建图层 -----
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # ----- ⑤ 绘制圆角气泡 -----
+    draw.rounded_rectangle(
+        (0, 0, width, height),
+        radius=corner_radius,
+        fill=bg_color,
+        outline=(230, 230, 230, 255),
+        width=2
+    )
+
+    # ----- ⑥ 绘制文本，垂直居中 -----
+    y = padding
+    for line in lines:
+        draw.text((padding, y), line, fill=text_color, font=font)
+        y += line_height
+
+    if save_path:
+        img.save(save_path)
+
+    return img
+
+# 下载qq头像
 def download_avatar(avatar_url, save_path="avatar.jpg"):
     """
     下载头像到本地
@@ -179,3 +260,221 @@ def get_qq_info(qq):
     download_circular_avatar(avatar_url, os.path.join(avatar_cache_location, f"{qq}-{name}.png"))
     return True
 
+# 联和两张图
+def resize_and_paste_avatar_advanced(
+    avatar,
+    background,
+    target_size=None,
+    position="center",
+    margin=20,
+    scale=None
+):
+    """
+    高级版本：支持绝对位置、相对位置，并新增 scale 比例缩放
+
+    Args:
+        avatar: 头像，可以是路径字符串或PIL Image对象
+        background: 背景，可以是路径字符串或PIL Image对象
+        target_size (tuple): (width, height)，最终固定尺寸
+        position (str/tuple): 相对或绝对位置
+        margin (int): 边距（相对位置用）
+        scale (float): ⭐ 按比例缩放。例：0.5=缩小一半，2.0=放大两倍
+
+    Returns:
+        PIL Image对象 或 None（失败时）
+    """
+    try:
+        # --- 1. 读取图片 ---
+        if isinstance(avatar, (str, os.PathLike)):
+            avatar = Image.open(avatar).convert("RGBA")
+        elif not isinstance(avatar, Image.Image):
+            raise ValueError("avatar必须是路径或PIL Image对象")
+
+        if isinstance(background, (str, os.PathLike)):
+            background = Image.open(background).convert("RGBA")
+        elif not isinstance(background, Image.Image):
+            raise ValueError("background必须是路径或PIL Image对象")
+
+        # --- 2. 按比例缩放 scale ---
+        if scale is not None:
+            if not isinstance(scale, (int, float)) or scale <= 0:
+                raise ValueError("scale 必须是正数")
+            w, h = avatar.size
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            avatar = avatar.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+        # --- 3. 如果指定了 target_size，再强制覆盖 ---
+        if target_size:
+            avatar = avatar.resize(target_size, Image.Resampling.LANCZOS)
+
+        # --- 位置计算 ---
+        bg_width, bg_height = background.size
+        av_width, av_height = avatar.size
+
+        if isinstance(position, str):
+            if position == "center":
+                x = (bg_width - av_width) // 2
+                y = (bg_height - av_height) // 2
+            elif position == "top-left":
+                x = margin
+                y = margin
+            elif position == "top-right":
+                x = bg_width - av_width - margin
+                y = margin
+            elif position == "bottom-left":
+                x = margin
+                y = bg_height - av_height - margin
+            elif position == "bottom-right":
+                x = bg_width - av_width - margin
+                y = bg_height - av_height - margin
+            else:
+                x, y = 0, 0
+        elif isinstance(position, (tuple, list)) and len(position) == 2:
+            x, y = position
+        else:
+            x, y = 0, 0
+
+        # --- 防止越界 ---
+        x = max(0, min(x, bg_width - av_width))
+        y = max(0, min(y, bg_height - av_height))
+
+        # --- 5. 合成 ---
+        result = background.copy()
+        result.paste(avatar, (x, y), avatar)
+        return result
+
+    except Exception as e:
+        print(f"处理失败: {e}")
+        return None
+
+def hex_to_rgb(hex_color):
+    """
+    将十六进制颜色转换为RGB
+    """
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+
+def create_rectangle_background(size, color="#F0F0F2", save_path=None):
+    """
+    生成矩形背景图片
+
+    Args:
+        size (tuple): 图片尺寸 (width, height)
+        color (str): 背景颜色，默认 #F0F0F2
+        save_path (str): 保存路径，None则不保存
+
+    Returns:
+        PIL Image对象
+    """
+    # 将十六进制颜色转换为RGB
+    if color.startswith('#'):
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+        rgb_color = (r, g, b)
+    else:
+        rgb_color = (240, 240, 242)  # 默认颜色 #F0F0F2
+
+    # 创建图片
+    image = Image.new('RGB', size, rgb_color)
+
+    if save_path:
+        image.save(save_path, "PNG")
+        print(f"矩形背景已保存到: {save_path}")
+        print(f"尺寸: {size}, 颜色: {color}")
+
+    return image
+
+def create_rectangle_background_rgba(size, color="#F0F0F2", alpha=255, save_path=None):
+    """
+    生成带透明度的矩形背景
+
+    Args:
+        size (tuple): 图片尺寸
+        color (str): 背景颜色
+        alpha (int): 透明度 0-255，255为不透明
+        save_path (str): 保存路径
+    """
+    if color.startswith('#'):
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
+        rgba_color = (r, g, b, alpha)
+    else:
+        rgba_color = (240, 240, 242, alpha)
+
+    image = Image.new('RGBA', size, rgba_color)
+
+    if save_path:
+        image.save(save_path, "PNG")
+        print(f"透明背景已保存到: {save_path}")
+
+    return image
+
+def create_chat_message_auto_bg(
+    text,
+    nickname,
+    avatar_path,
+    bubble_font_path="./resources/fonts/SourceHanSansSC-Light.otf",
+    nickname_font_path="./resources/fonts/SourceHanSansSC-ExtraLight.otf",
+    bubble_font_size=30,
+    bubble_padding=17,
+    bubble_bg_color=(255, 255, 255, 220),
+    text_color=(0, 0, 0, 255),
+    corner_radius=27,
+    avatar_size=(89, 89),
+    margin=20,
+    default_bubble_position=(126, 50),
+    default_avatar_position=(23, 10)
+):
+    """
+    高阶函数：生成聊天气泡 + 背景 + 头像 + 昵称
+    背景大小自动适应气泡 + 头像，默认坐标保持原逻辑
+    """
+    # 1. 创建聊天气泡
+    bubble = create_chat_bubble(
+        text=text,
+        font_path=bubble_font_path,
+        font_size=bubble_font_size,
+        padding=bubble_padding,
+        bg_color=bubble_bg_color,
+        text_color=text_color,
+        corner_radius=corner_radius
+    )
+    bubble_w, bubble_h = bubble.size
+
+    # 2. 自动计算背景大小
+    bg_w = max(default_bubble_position[0] + bubble_w + margin, default_avatar_position[0] + avatar_size[0] + margin)
+    bg_h = max(default_bubble_position[1] + bubble_h + margin, default_avatar_position[1] + avatar_size[1] + margin)
+    background = create_rectangle_background((bg_w, bg_h))
+
+    # 3. 合成气泡到背景
+    result = resize_and_paste_avatar_advanced(
+        avatar=bubble,
+        background=background,
+        position=default_bubble_position
+    )
+
+    # 4. 加载头像并调整大小
+    avatar_img = Image.open(avatar_path).convert("RGBA")
+    avatar_img = avatar_img.resize(avatar_size, Image.Resampling.LANCZOS)
+
+    # 5. 合成头像
+    result = resize_and_paste_avatar_advanced(
+        avatar=avatar_img,
+        background=result,
+        position=default_avatar_position
+    )
+
+    # 6. 绘制昵称
+    draw = ImageDraw.Draw(result)
+    nickname_font = ImageFont.truetype(nickname_font_path, 25)
+    draw.text(
+        (default_bubble_position[0], default_avatar_position[1]),
+        nickname,
+        fill=text_color,
+        font=nickname_font
+    )
+
+    return result
