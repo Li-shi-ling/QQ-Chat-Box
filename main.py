@@ -26,6 +26,7 @@ class EmojiGenerator:
         self._initialize()
         self.qqbox = ChatBubbleGenerator()
         self.qq = None
+        self.set_qq()
 
     def _initialize(self):
         """初始化应用"""
@@ -35,6 +36,9 @@ class EmojiGenerator:
         logging.info(f"热键绑定: {self.config.hotkey}")
         logging.info(f"允许的进程: {self.config.allowed_processes}")
 
+    def set_qq(self):
+        self.qq = input("QQ:")
+
     def _register_hotkeys(self):
         """注册热键"""
         # 主生成热键
@@ -42,6 +46,11 @@ class EmojiGenerator:
             self.config.hotkey,
             self.generate_image,
             suppress=self.config.block_hotkey or self.config.hotkey == self.config.send_hotkey,
+        )
+
+        keyboard.add_hotkey(
+            "ctrl+1",
+            self.set_qq,
         )
 
     def generate_image(self):
