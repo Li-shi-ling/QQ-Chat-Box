@@ -93,3 +93,4 @@ class ClipboardManager:
         new_clipboard = pyperclip.paste()
 
         return new_clipboard, old_clipboard
+

@@ -2,7 +2,7 @@ import io
 import logging
 import time
 from typing import Optional
-from src.core.qqbox import ChatBubbleGenerator
+from src.core.qqbox import ChatBubbleGenerator, resize_by_scale, get_qq_info
 from PIL import Image
 
 import keyboard
@@ -38,6 +38,8 @@ class EmojiGenerator:
 
     def set_qq(self):
         self.qq = input("QQ:")
+        if get_qq_info(self.qq) is None:
+            logging.info(f"没找到对应qq")
 
     def _register_hotkeys(self):
         """注册热键"""
@@ -75,7 +77,10 @@ class EmojiGenerator:
 
         # 生成图片
         # -------------------------------------------------------------
-        png = self.qqbox.create_chat_message(self.qq, user_text)
+        png = resize_by_scale(
+            self.qqbox.create_chat_message(self.qq, user_text),
+            0.5
+        )
         if not png:
             return
 
