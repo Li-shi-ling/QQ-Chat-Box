@@ -16,18 +16,10 @@ class ConfigModel(BaseModel):
     send_hotkey: str = DefaultConfig.SEND_HOTKEY
     block_hotkey: bool = DefaultConfig.BLOCK_HOTKEY
     delay: float = DefaultConfig.DELAY
-    font_file: str = DefaultConfig.FONT_FILE
-    baseimage_mapping: Dict[str, str] = DefaultConfig.BASEIMAGE_MAPPING
-    baseimage_file: str = DefaultConfig.BASEIMAGE_FILE
-    text_box_topleft: Tuple[int, int] = DefaultConfig.TEXT_BOX_TOPLEFT
-    image_box_bottomright: Tuple[int, int] = DefaultConfig.IMAGE_BOX_BOTTOMRIGHT
-    base_overlay_file: str = DefaultConfig.BASE_OVERLAY_FILE
-    use_base_overlay: bool = DefaultConfig.USE_BASE_OVERLAY
     auto_paste_image: bool = DefaultConfig.AUTO_PASTE_IMAGE
     auto_send_image: bool = DefaultConfig.AUTO_SEND_IMAGE
     logging_level: str = DefaultConfig.LOGGING_LEVEL
-    emotion_switch_hotkeys: Dict[str, str] = DefaultConfig.EMOTION_SWITCH_HOTKEYS
-    text_wrap_algorithm: str = DefaultConfig.TEXT_WRAP_ALGORITHM
+    avatar_cache_location: str = DefaultConfig.AVATAR_CACHE_LOCATION
 
     class Config:
         arbitrary_types_allowed = True
@@ -89,18 +81,10 @@ class ConfigLoader:
             'send_hotkey': DefaultConfig.SEND_HOTKEY,
             'block_hotkey': DefaultConfig.BLOCK_HOTKEY,
             'delay': DefaultConfig.DELAY,
-            'font_file': DefaultConfig.FONT_FILE,
-            'baseimage_mapping': DefaultConfig.BASEIMAGE_MAPPING,
-            'baseimage_file': DefaultConfig.BASEIMAGE_FILE,
-            'text_box_topleft': list(DefaultConfig.TEXT_BOX_TOPLEFT),
-            'image_box_bottomright': list(DefaultConfig.IMAGE_BOX_BOTTOMRIGHT),
-            'base_overlay_file': DefaultConfig.BASE_OVERLAY_FILE,
-            'use_base_overlay': DefaultConfig.USE_BASE_OVERLAY,
             'auto_paste_image': DefaultConfig.AUTO_PASTE_IMAGE,
             'auto_send_image': DefaultConfig.AUTO_SEND_IMAGE,
             'logging_level': DefaultConfig.LOGGING_LEVEL,
-            'emotion_switch_hotkeys': DefaultConfig.EMOTION_SWITCH_HOTKEYS,
-            'text_wrap_algorithm': DefaultConfig.TEXT_WRAP_ALGORITHM,
+            'avatar_cache_location': DefaultConfig.AVATAR_CACHE_LOCATION,
         }
 
         with open(config_file, 'w', encoding='utf-8') as f:

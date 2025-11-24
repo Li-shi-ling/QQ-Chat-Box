@@ -12,10 +12,10 @@ class ClipboardManager:
     """剪贴板管理类"""
 
     @staticmethod
-    def copy_png_to_clipboard(png_bytes: bytes):
+    def copy_png_to_clipboard(png: Image):
         """将PNG字节流复制到剪贴板"""
         try:
-            image = Image.open(io.BytesIO(png_bytes))
+            image = png
 
             # 转换为BMP格式（Windows剪贴板需要）
             with io.BytesIO() as output:

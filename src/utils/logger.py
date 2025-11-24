@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 def setup_logger(level: str = "INFO"):
     """设置日志配置"""
     log_level = getattr(logging, level.upper(), logging.INFO)
