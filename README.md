@@ -5,4 +5,4 @@
 ## 基础命令
 ctrl+1 : 输入qq号
 
-### 参考了https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box项目,感谢大佬开源
+### 参考了https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box 项目,感谢大佬开源
