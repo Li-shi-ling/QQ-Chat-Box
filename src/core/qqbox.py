@@ -350,18 +350,45 @@ def create_circular_avatar(image, radius):
 
     return result
 
+import os
+import requests
+import json
+from PIL import Image, ImageDraw
+from io import BytesIO
+
 def get_qq_info(qq):
-    avatar_cache_location = os.environ.get('avatar_cache_location')
+    avatar_cache_location = os.environ.get('avatar_cache_location', '.')  # 默认当前目录
+    if not os.path.exists(avatar_cache_location):
+        os.makedirs(avatar_cache_location)
+
+    # 检查缓存目录中是否存在对应qq的头像文件
+    for filename in os.listdir(avatar_cache_location):
+        if filename.startswith(f"{qq}-") and filename.lower().endswith('.png'):
+            # 文件名格式: qq-昵称.png
+            name = filename[len(f"{qq}-"):-4]  # 去掉 qq- 和 .png 获取昵称
+            file_path = os.path.join(avatar_cache_location, filename)
+            return {"qq": qq, "name": name, "avatar_path": file_path}
+
+    # 如果缓存不存在，则访问API获取QQ信息
     response = requests.get(f"https://uapis.cn/api/v1/social/qq/userinfo?qq={qq}")
-    data = json.loads(response.text)
-    if response.status_code == 200:
-        name = data["nickname"]
-        qq = data["qq"]
-        avatar_url = data["avatar_url"]
+    if response.status_code != 200:
+        return False  # 请求失败
+
+    data = response.json()
+    name = data.get("nickname", qq)
+    avatar_url = data.get("avatar_url")
+    if not avatar_url:
+        return False  # 没有头像URL
+
+    # 构建保存路径
+    save_path = os.path.join(avatar_cache_location, f"{qq}-{name}.png")
+
+    # 下载圆形头像
+    downloaded_path = download_circular_avatar(avatar_url, save_path)
+    if downloaded_path:
+        return {"qq": qq, "name": name, "avatar_path": downloaded_path}
     else:
-        return False
-    download_circular_avatar(avatar_url, os.path.join(avatar_cache_location, f"{qq}-{name}.png"))
-    return True
+        return None
 
 class ChatBubbleGenerator:
     def __init__(
@@ -396,9 +423,8 @@ class ChatBubbleGenerator:
 
     def create_chat_message(
         self,
+        qq,
         text,
-        nickname,
-        avatar_path,
         bubble_position=(126, 50),
         avatar_position=(23, 10),
         background_color="#F0F0F2"
@@ -407,10 +433,13 @@ class ChatBubbleGenerator:
         生成聊天气泡 + 背景 + 头像 + 昵称
         背景大小自动适应气泡和头像
         """
-        # 1. 生成聊天气泡
+        avatar_data = get_qq_info(qq)
+        assert not avatar_data is None, f"没能成功获取{qq}的信息"
+        nickname = avatar_data["name"]
+        avatar_path = avatar_data["avatar_path"]
         bubble = create_chat_bubble(
             text=text,
-            font=self.bubble_font,   # 使用初始化字体
+            font=self.bubble_font,
             font_size=self.bubble_font_size,
             padding=self.bubble_padding,
             bg_color=self.bubble_bg_color,
@@ -418,33 +447,23 @@ class ChatBubbleGenerator:
             corner_radius=self.corner_radius
         )
         bubble_w, bubble_h = bubble.size
-
-        # 2. 自动计算背景大小
         bg_w = max(bubble_position[0] + bubble_w + self.margin,
                    avatar_position[0] + self.avatar_size[0] + self.margin)
         bg_h = max(bubble_position[1] + bubble_h + self.margin,
                    avatar_position[1] + self.avatar_size[1] + self.margin)
         background = create_rectangle_background((bg_w, bg_h), color=background_color)
-
-        # 3. 合成气泡
         result = resize_and_paste_avatar_advanced(
             avatar=bubble,
             background=background,
             position=bubble_position
         )
-
-        # 4. 加载头像并调整大小
         avatar_img = Image.open(avatar_path).convert("RGBA")
         avatar_img = avatar_img.resize(self.avatar_size, Image.Resampling.LANCZOS)
-
-        # 5. 合成头像
         result = resize_and_paste_avatar_advanced(
             avatar=avatar_img,
             background=result,
             position=avatar_position
         )
-
-        # 6. 绘制昵称
         draw = ImageDraw.Draw(result)
         draw.text(
             (bubble_position[0], avatar_position[1]),
@@ -452,5 +471,4 @@ class ChatBubbleGenerator:
             fill=self.text_color,
             font=self.nickname_font
         )
-
         return result
