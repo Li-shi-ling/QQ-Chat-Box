@@ -73,7 +73,7 @@ class EmojiGenerator:
         # -------------------------------------------------------------
         png = resize_by_scale(
             self.qqbox.create_chat_message(self.qq, user_text),
-            0.5
+            1.0
         )
         if not png:
             return
