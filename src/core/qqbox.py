@@ -117,7 +117,7 @@ def create_rectangle_background(size, color="#F0F0F2", save_path=None):
 
     return image
 
-def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceHanSansSC-Light.otf",
+def create_chat_bubble(text, max_width=640, font_path="./resources/fonts/SourceHanSansSC-Light.otf",
         font_size=36, font=None, padding=21, bg_color=(255, 255, 255, 220),
         text_color=(0, 0, 0, 255), corner_radius=27, save_path=None
     ):
