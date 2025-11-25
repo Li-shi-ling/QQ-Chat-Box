@@ -5,6 +5,7 @@ import requests
 import math
 import json
 import os
+import re
 
 # 联和两张图
 def resize_and_paste_avatar_advanced(avatar, background, target_size=None, position="center", margin=20, scale=None):
@@ -432,10 +433,18 @@ class ChatBubbleGenerator:
             corner_radius=self.corner_radius
         )
         bubble_w, bubble_h = bubble.size
-        bg_w = max(bubble_position[0] + bubble_w + self.margin,
-                   avatar_position[0] + self.avatar_size[0] + self.margin)
-        bg_h = max(bubble_position[1] + bubble_h + self.margin,
-                   avatar_position[1] + self.avatar_size[1] + self.margin)
+        temp_img = Image.new("RGB", (1, 1))
+        temp_draw = ImageDraw.Draw(temp_img)
+        nickname_width = int(temp_draw.textlength(nickname, font=self.nickname_font)) + self.bubble_padding
+        bg_w = max(
+            bubble_position[0] + bubble_w + self.margin,
+            avatar_position[0] + self.avatar_size[0] + self.margin,
+            bubble_position[0] + nickname_width
+        )
+        bg_h = max(
+            bubble_position[1] + bubble_h + self.margin,
+            avatar_position[1] + self.avatar_size[1] + self.margin
+        )
         background = create_rectangle_background((bg_w, bg_h), color=background_color)
         result = resize_and_paste_avatar_advanced(
             avatar=bubble,
