@@ -1,10 +1,10 @@
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import os
 import requests
+import os
 import re
-# -------------------- 基础工具函数 --------------------
 
+# -------------------- 基础工具函数 --------------------
 def resize_and_paste_avatar_advanced(avatar, background, target_size=None, position="center", margin=20, scale=None):
     """ 高级版本：支持绝对/相对位置，支持 scale 缩放 """
     try:
@@ -16,13 +16,11 @@ def resize_and_paste_avatar_advanced(avatar, background, target_size=None, posit
             background = Image.open(background).convert("RGBA")
         elif not isinstance(background, Image.Image):
             raise ValueError("background必须是路径或PIL Image对象")
-
         if scale:
             w, h = avatar.size
             avatar = avatar.resize((int(w*scale), int(h*scale)), Image.Resampling.LANCZOS)
         if target_size:
             avatar = avatar.resize(target_size, Image.Resampling.LANCZOS)
-
         bg_w, bg_h = background.size
         av_w, av_h = avatar.size
         if isinstance(position, str):
@@ -125,7 +123,6 @@ def get_qq_info(qq):
     return None
 
 # -------------------- 超采样气泡生成 --------------------
-
 def create_chat_bubble(text, max_width=480,
                        font_path="./resources/fonts/SourceHanSansSC-Light.otf",
                        font_size=20, font=None, padding=21,
@@ -256,11 +253,9 @@ class ChatBubbleGenerator:
         print(en_leng,cn_leng)
         return int(1.92*self.nickname_font_size*en_leng + 4.18 * self.nickname_font_size*cn_leng)
 
-
 def resize_by_scale(image, scale_factor):
     """按比例缩小图像"""
     width, height = image.size
     new_width = int(width * scale_factor)
     new_height = int(height * scale_factor)
     return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-

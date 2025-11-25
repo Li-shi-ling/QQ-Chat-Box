@@ -1,20 +1,14 @@
-import io
-import logging
-import time
-from typing import Optional
 from src.core.qqbox import ChatBubbleGenerator, resize_by_scale, get_qq_info
-from PIL import Image
-
-import keyboard
-import pyperclip
-
-from src.config.config_loader import ConfigLoader
 from src.core.clipboard_manager import ClipboardManager
+from src.config.config_loader import ConfigLoader
 from src.utils.system_utils import SystemUtils
 from src.utils.logger import setup_logger
+from PIL import Image
+import pyperclip
+import keyboard
+import logging
+import time
 import os
-
-
 
 class EmojiGenerator:
     """表情生成器主类"""
@@ -132,7 +126,6 @@ class EmojiGenerator:
 
 
 if __name__ == "__main__":
-
     # 运行应用
     app = EmojiGenerator()
     app.run()

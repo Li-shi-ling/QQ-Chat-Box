@@ -1,12 +1,11 @@
-import io
-import time
-import logging
 from typing import Optional, Tuple
-import keyboard
-import pyperclip
-import win32clipboard
 from PIL import Image
-
+import win32clipboard
+import pyperclip
+import keyboard
+import logging
+import time
+import io
 
 class ClipboardManager:
     """剪贴板管理类"""
@@ -93,4 +92,3 @@ class ClipboardManager:
         new_clipboard = pyperclip.paste()
 
         return new_clipboard, old_clipboard
-
