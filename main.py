@@ -25,7 +25,7 @@ class EmojiGenerator:
         # 初始化
         self._initialize()
         self.qqbox = ChatBubbleGenerator()
-        self.qq = None
+        self.qq = 43578818#None
         self.set_qq()
 
     def _initialize(self):
@@ -81,6 +81,7 @@ class EmojiGenerator:
             self.qqbox.create_chat_message(self.qq, user_text),
             0.5
         )
+
         if not png:
             return
 
