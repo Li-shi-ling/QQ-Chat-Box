@@ -138,6 +138,13 @@ def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceH
     current = ""
 
     for ch in text:
+        # 如果遇到换行符，立即换行
+        if ch == '\n':
+            if current:  # 如果当前行有内容，先保存当前行
+                lines.append(current)
+            current = ""
+            continue
+
         test = current + ch
         w = draw_tmp.textlength(test, font=font)
         if w <= max_width - padding * 2:
@@ -146,6 +153,7 @@ def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceH
             lines.append(current)
             current = ch
 
+    # 处理最后一行
     if current:
         lines.append(current)
 
@@ -156,7 +164,7 @@ def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceH
     text_width = max(draw_tmp.textlength(line, font=font) for line in lines)
 
     width = int(text_width + padding * 2)
-    height = int(text_height + padding * 3)
+    height = int(text_height + padding * (2 + len(lines)))
 
     # ----- ④ 创建图层 -----
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -175,7 +183,7 @@ def create_chat_bubble(text, max_width=480, font_path="./resources/fonts/SourceH
     y = padding
     for line in lines:
         draw.text((padding, y), line, fill=text_color, font=font)
-        y += line_height
+        y += line_height + padding
 
     if save_path:
         img.save(save_path)
@@ -379,11 +387,11 @@ def get_qq_info(qq):
 class ChatBubbleGenerator:
     def __init__(
         self,
-        bubble_font_path="./resources/fonts/SourceHanSansSC-Light.otf",
+        bubble_font_path="./resources/fonts/Microsoft-YaHei-Semilight.ttc", # "./resources/fonts/Microsoft-YaHei-Light.ttc", # "./resources/fonts/SourceHanSansSC-Light.otf",
         nickname_font_path="./resources/fonts/SourceHanSansSC-ExtraLight.otf",
-        bubble_font_size=30,
+        bubble_font_size=34,
         nickname_font_size=25,
-        bubble_padding=17,
+        bubble_padding=20,
         bubble_bg_color=(255, 255, 255, 220),
         text_color=(0, 0, 0, 255),
         corner_radius=27,
@@ -393,6 +401,7 @@ class ChatBubbleGenerator:
         """
         初始化聊天气泡生成器，字体只加载一次
         """
+        print(bubble_font_path)
         self.bubble_font = ImageFont.truetype(bubble_font_path, bubble_font_size) \
             if os.path.exists(bubble_font_path) else ImageFont.load_default()
         self.nickname_font = ImageFont.truetype(nickname_font_path, nickname_font_size) \
