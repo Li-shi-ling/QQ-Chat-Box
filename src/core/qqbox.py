@@ -252,12 +252,6 @@ class ChatBubbleGenerator:
         avatar_position=(23, 10),
         background_color="#F0F0F2"
     ):
-        print(qq)
-        print(text)
-        print(qq_title_key)
-        print(bubble_position)
-        print(avatar_position)
-        print(background_color)
         info = get_qq_info(qq)
         assert info is not None, f"无法获取 QQ: {qq} 的信息"
 

@@ -27,7 +27,10 @@ class EmojiGenerator:
             os.makedirs(os.path.dirname(self.config.avatar_cache_location), exist_ok=True)
             self.qq_title_key = {}
         else:
-            self.qq_title_key = read_json_file(os.path.join(self.config.avatar_cache_location,"qq_data.json"))
+            try:
+                self.qq_title_key = read_json_file(os.path.join(self.config.avatar_cache_location,"qq_data.json"))
+            except:
+                self.qq_title_key = {}
 
     def _initialize(self):
         """初始化应用"""
@@ -61,6 +64,11 @@ class EmojiGenerator:
             self.set_title,
         )
 
+        keyboard.add_hotkey(
+            "ctrl+3",
+            self.set_note,
+        )
+
     def set_title(self):
         color = input("颜色:(1.灰色,2.紫色,3.黄色,4.绿色;请直接输入数字)")
         match = re.search(r'[1-4]', color)
@@ -71,6 +79,21 @@ class EmojiGenerator:
             "content" : Content,
             "notes": self.qq_title_key.get(str(self.qq),{}).get("notes",None)
         }
+        write_json_file(self.qq_title_key, os.path.join(self.config.avatar_cache_location,"qq_data.json"))
+
+    def set_note(self):
+        note = input("请设置别名:")
+        qq_title_key = self.qq_title_key.get(str(self.qq),None)
+        if qq_title_key is None:
+            self.qq_title_key[str(self.qq)] = {
+                "color" : None,
+                "content" : None,
+                "notes": note
+            }
+        else:
+            self.qq_title_key[str(self.qq)]["notes"] = note
+        write_json_file(self.qq_title_key, os.path.join(self.config.avatar_cache_location,"qq_data.json"))
+
 
     def generate_image(self):
         """生成图像的主函数"""
