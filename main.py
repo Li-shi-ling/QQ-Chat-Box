@@ -1,4 +1,5 @@
 from src.core.qqbox import ChatBubbleGenerator, resize_by_scale, get_qq_info
+from src.core.tool import read_json_file, write_json_file
 from src.core.clipboard_manager import ClipboardManager
 from src.config.config_loader import ConfigLoader
 from src.utils.system_utils import SystemUtils
@@ -9,6 +10,7 @@ import keyboard
 import logging
 import time
 import os
+import re
 
 class EmojiGenerator:
     """表情生成器主类"""
@@ -21,6 +23,11 @@ class EmojiGenerator:
         self.qqbox = ChatBubbleGenerator()
         self.qq = None
         self.set_qq()
+        if not os.path.exists(os.path.join(self.config.avatar_cache_location,"qq_data.json")):
+            os.makedirs(os.path.dirname(self.config.avatar_cache_location), exist_ok=True)
+            self.qq_title_key = {}
+        else:
+            self.qq_title_key = read_json_file(os.path.join(self.config.avatar_cache_location,"qq_data.json"))
 
     def _initialize(self):
         """初始化应用"""
@@ -49,6 +56,22 @@ class EmojiGenerator:
             self.set_qq,
         )
 
+        keyboard.add_hotkey(
+            "ctrl+2",
+            self.set_title,
+        )
+
+    def set_title(self):
+        color = input("颜色:(1.灰色,2.紫色,3.黄色,4.绿色;请直接输入数字)")
+        match = re.search(r'[1-4]', color)
+        color_clean = match.group() if match else "1"
+        Content = input("内容:")
+        self.qq_title_key[str(self.qq)] = {
+            "color" : color_clean,
+            "content" : Content,
+            "notes": self.qq_title_key.get(str(self.qq),{}).get("notes",None)
+        }
+
     def generate_image(self):
         """生成图像的主函数"""
         # 检查进程权限
@@ -72,7 +95,7 @@ class EmojiGenerator:
         # 生成图片
         # -------------------------------------------------------------
         png = resize_by_scale(
-            self.qqbox.create_chat_message(self.qq, user_text),
+            self.qqbox.create_chat_message(self.qq, user_text, self.qq_title_key),
             1.0
         )
         if not png:
