@@ -32,8 +32,16 @@ class ClipboardManager:
             raise
 
     @staticmethod
-    def get_image_from_clipboard() -> Optional[Image.Image]:
+    def get_image_from_clipboard(
+            select_hotkey: str = "ctrl+a",
+            cut_hotkey: str = "ctrl+c",
+            delay: float = 0.1
+    ) -> Optional[Image.Image]:
         """从剪贴板获取图像"""
+        keyboard.send(select_hotkey)
+        time.sleep(delay)
+        keyboard.send(cut_hotkey)
+        time.sleep(delay)
         try:
             win32clipboard.OpenClipboard()
 
@@ -92,3 +100,4 @@ class ClipboardManager:
         new_clipboard = pyperclip.paste()
 
         return new_clipboard, old_clipboard
+

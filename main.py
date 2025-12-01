@@ -102,6 +102,7 @@ class EmojiGenerator:
             return
 
         # 获取用户输入
+        user_image = ClipboardManager.get_image_from_clipboard()
         user_text, old_clipboard = ClipboardManager.cut_all_and_get_text(
             self.config.select_all_hotkey,
             self.config.cut_hotkey,
@@ -111,14 +112,19 @@ class EmojiGenerator:
         logging.debug(f"用户输入 - 文本: '{user_text}'")
 
         # 处理输入
-        if not user_text:
-            logging.info("未检测到文本输入，取消生成")
+        if ((not user_text) and (user_image is None)):
+            logging.info("未检测到文本或图片输入，取消生成")
             return
 
         # 生成图片
         # -------------------------------------------------------------
         png = resize_by_scale(
-            self.qqbox.create_chat_message(self.qq, user_text, self.qq_title_key),
+            self.qqbox.create_chat_message(
+                qq = self.qq,
+                text = user_text,
+                image = user_image,
+                qq_title_key = self.qq_title_key
+            ),
             1.0
         )
         if not png:

@@ -107,6 +107,7 @@ class ChatBubbleGenerator:
         avatar_size=(89, 89),
         margin=20,
         title_bubble_name_offset=-1,
+        max_width = 640
     ):
         self.SCALE = 4  # supersampling 倍率
 
@@ -134,6 +135,7 @@ class ChatBubbleGenerator:
         self.title_bubble_offset = title_bubble_offset
         self.title_padding_y_offset = title_padding_y_offset
         self.title_bubble_name_offset = title_bubble_name_offset
+        self.max_width = max_width
 
 
     # ------------------------------------------------------------------------------
@@ -143,12 +145,9 @@ class ChatBubbleGenerator:
         SCALE = self.SCALE
         font = self.bubble_font
         padding = self.bubble_padding * SCALE
-        max_width = 640 * SCALE
-
-        # 临时画布测量文本
+        max_width = self.max_width * SCALE
         tmp = Image.new("RGBA", (10, 10))
         draw_tmp = ImageDraw.Draw(tmp)
-
         lines = []
         current = ""
         for ch in text:
@@ -195,6 +194,149 @@ class ChatBubbleGenerator:
         # 缩回正常尺寸实现高清
         img = img.resize((width // SCALE, height // SCALE), Image.Resampling.LANCZOS)
         return img
+
+    # ------------------------------------------------------------------------------
+    # 创建聊天气泡（图片）
+    # ------------------------------------------------------------------------------
+    def create_chat_img_bubble(self, image):
+        SCALE = self.SCALE
+        max_width = self.max_width * SCALE
+        if isinstance(image, str):
+            img = Image.open(image)
+        else:
+            img = image
+        img = resize_by_scale(img, SCALE * 0.8)
+        orig_width, orig_height = img.size
+        if orig_width > max_width:
+            width_ratio = max_width / orig_width
+            new_width = int(orig_width * width_ratio)
+            new_height = int(orig_height * width_ratio)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        else:
+            new_width, new_height = orig_width, orig_height
+        canvas_width = new_width
+        canvas_height = new_height
+        canvas = Image.new("RGBA", (canvas_width, canvas_height), (0, 0, 0, 0))
+        mask = Image.new("L", (new_width, new_height), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        min_side = min(new_width, new_height)
+        radius_percentage = 0.05
+        dynamic_radius = int(min_side * radius_percentage)
+        max_radius = 50 * SCALE
+        final_radius = min(dynamic_radius, max_radius)
+        draw_mask.rounded_rectangle(
+            (0, 0, new_width, new_height),
+            radius=final_radius,
+            fill=255
+        )
+        canvas.paste(img, (-10, 0), mask)
+
+        # 缩回正常尺寸实现高清
+        if SCALE > 1:
+            canvas = canvas.resize(
+                (canvas_width // SCALE, canvas_height // SCALE),
+                Image.Resampling.LANCZOS
+            )
+
+        return canvas
+
+    # ------------------------------------------------------------------------------
+    # 创建聊天气泡（图片 + 文字）
+    # ------------------------------------------------------------------------------
+    def create_chat_text_img_bubble(self, text, image):
+        SCALE = self.SCALE
+        font = self.bubble_font
+        padding = self.bubble_padding * SCALE
+        max_width = self.max_width * SCALE
+
+        # 按比例缩放图片
+        image = resize_by_scale(image, SCALE * 0.8)
+        orig_width, orig_height = image.size
+        if orig_width > max_width - 2 * padding:
+            width_ratio = (max_width - 2 * padding) / orig_width
+            new_width = int(orig_width * width_ratio)
+            new_height = int(orig_height * width_ratio)
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        else:
+            new_width, new_height = orig_width, orig_height
+        canvas_width = new_width
+        canvas_height = new_height
+        canvas = Image.new("RGBA", (canvas_width, canvas_height), (0, 0, 0, 0))
+        mask = Image.new("L", (new_width, new_height), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        min_side = min(new_width, new_height)
+        radius_percentage = 0.05
+        dynamic_radius = int(min_side * radius_percentage)
+        max_radius = 50 * SCALE
+        final_radius = min(dynamic_radius, max_radius)
+        draw_mask.rounded_rectangle(
+            (0, 0, new_width, new_height),
+            radius=final_radius,
+            fill=255
+        )
+        canvas.paste(image, (-10, 0), mask)
+
+
+
+        tmp = Image.new("RGBA", (10, 10))
+        draw_tmp = ImageDraw.Draw(tmp)
+        lines = []
+        current = ""
+        for ch in text:
+            test = current + ch
+            if ch == "\n":
+                lines.append(current)
+                current = ""
+            else:
+                try:
+                    w = draw_tmp.textlength(test, font=font)
+                except:
+                    ch = " "
+                    test = current + ch
+                    w = draw_tmp.textlength(test, font=font)
+                if w <= max_width - padding * 2:
+                    current = test
+                else:
+                    lines.append(current)
+                    current = ch
+        if current:
+            lines.append(current)
+        # 保留原 bbox 行高算法
+        bbox = font.getbbox("字")
+        line_height = int(bbox[3] - bbox[1] + 4 * SCALE)
+        text_height = line_height * len(lines)
+        text_width = max(draw_tmp.textlength(line, font=font) for line in lines)
+        width = int(text_width + padding * 2)
+        height = text_height + padding * (2 + len(lines)) + canvas.height + padding
+        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.rounded_rectangle(
+            (0, 0, width, height),
+            radius=self.corner_radius * SCALE,
+            fill=self.bubble_bg_color,
+            outline=(230, 230, 230, 255),
+            width=2 * SCALE
+        )
+
+        y = padding
+        for line in lines:
+            draw.text((padding, y), line, fill=self.text_color, font=font)
+            y += line_height + padding
+        img.paste(
+            canvas,
+            (
+                padding,
+                text_height + padding * (2 + len(lines) + 1),
+                padding + new_width,
+                text_height + padding * (2 + len(lines) + 1) + new_height
+            ),
+            canvas
+        )
+
+        # 缩回正常尺寸实现高清
+        img = img.resize((width // SCALE, height // SCALE), Image.Resampling.LANCZOS)
+        return img
+
 
     # ------------------------------------------------------------------------------
     # 添加创建头衔气泡的方法
@@ -247,6 +389,7 @@ class ChatBubbleGenerator:
         self,
         qq,
         text,
+        image,
         qq_title_key = None,
         bubble_position=(120, 60),
         avatar_position=(23, 10),
@@ -259,7 +402,10 @@ class ChatBubbleGenerator:
         avatar_path = info["avatar_path"]
 
         # 气泡
-        bubble = self.create_chat_bubble(text)
+        if text and (image is None):
+            bubble = self.create_chat_bubble(text)
+        else:
+            bubble = self.create_chat_img_bubble(image)
         bubble_w, bubble_h = bubble.size
 
         # 昵称宽度（正常尺寸）
@@ -270,9 +416,9 @@ class ChatBubbleGenerator:
         qq_title = qq_title_key.get(qq, None)
         is_title = not qq_title is None
         if is_title:
-            tmp_nickname = qq_title.get("notes",None)
-            content = qq_title.get("content","")
-            title_color = qq_title.get("color","1")
+            tmp_nickname = qq_title.get("notes", None)
+            content = qq_title.get("content", "")
+            title_color = qq_title.get("color", "1")
             if not tmp_nickname is None:
                 nickname = tmp_nickname
             nickname_width = int(draw_tmp.textlength(nickname, font=self.nickname_font)) + self.bubble_padding
@@ -320,8 +466,9 @@ class ChatBubbleGenerator:
                 4: (82, 215, 197, 220)  # #52D7C5
             }
             title_bg_color = color_map.get(int(title_color), color_map[1])
-            title_bubble = self.create_title_bubble(content,title_bg_color)
-            background.paste(title_bubble, (bubble_position[0], avatar_position[1] + self.title_bubble_offset), title_bubble)
+            title_bubble = self.create_title_bubble(content, title_bg_color)
+            background.paste(title_bubble, (bubble_position[0], avatar_position[1] + self.title_bubble_offset),
+                             title_bubble)
             draw = ImageDraw.Draw(background)
             draw.text(
                 (bubble_position[0] + title_width + self.title_bubble_name_offset, avatar_position[1]),
