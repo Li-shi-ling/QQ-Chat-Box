@@ -22,13 +22,17 @@ def get_qq_info(qq):
             }
 
     # 请求 API
-    url = f"https://uapis.cn/api/v1/social/qq/userinfo?qq={qq}"
+    # url = f"https://uapis.cn/api/v1/social/qq/userinfo?qq={qq}"
+    url = f"http://api.mmp.cc/api/qqname?qq={qq}"
     res = requests.get(url)
     if res.status_code != 200:
-        return None
-
-    data = res.json()
-    nickname = data.get("nickname", qq)
+        nickname = qq
+    else:
+        data = res.json()
+        try:
+            nickname = data["data"]["name"]
+        except:
+            nickname = qq
     # avatar_url = data.get("avatar_url")
     avatar_url = f"https://q1.qlogo.cn/g?b=qq&nk={qq}&s=640"
     # avatar_url = f"http://q.qlogo.cn/headimg_dl?dst_uin={qq}&spec=640&img_type=png"
